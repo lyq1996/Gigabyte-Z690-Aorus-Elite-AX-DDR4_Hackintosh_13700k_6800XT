@@ -244,7 +244,7 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 | 组件 | 型号 |
 | --- | --- |
 | CPU | 13th Gen Intel(R) Core(TM) i7-13700K |
-| 主办 | 技嘉Z690 Aorus Elite AX ddr4  |
+| 主板 | 技嘉Z690 Aorus Elite AX ddr4  |
 | 显卡 | 技嘉6800XT 超级雕 |
 | 内存 | 英睿达铂胜DDR4 3200MHz 16GBx2 超频至3800Mhz C16|
 | Wi-Fi与蓝牙 | Fenvi T919 |
@@ -258,7 +258,7 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 ## 哪些东西不工作?
 1. 睡眠有条件的工作，见[已知问题](#已知问题)。
 2. 唤醒后蓝牙有点问题，见[唤醒后的蓝牙问题](#唤醒后的蓝牙问题)。
-2. 由于12、13代cpu的核显无法正常驱动，随航不可用。
+3. 由于12、13代cpu的核显无法正常驱动，随航不可用。
 
 ## 更新日志
 ### 2022-01-02
@@ -270,7 +270,7 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 ### 关闭项
 1. Secure Boot`【必须】`
 
-### 启用
+### 启用项
 1. Above 4G Enconding`【必须】`
 2. Above 4GB MMIO BIOS assignment`【必须】`
 3. Re-Size Bar`【必须】`
@@ -306,7 +306,7 @@ revpatch=auto,sbvmm,asset
 ## 屏蔽其他NVMe硬盘
 如果你需要屏蔽一些不支持黑苹果的硬盘，只要打开`ACPI - Add - SSDT-DNVMe.aml`，这会屏蔽插在第一个M.2槽(靠近cpu)的NVMe协议硬盘。
 
-同样，你也可以打开SSDT-DNVMe.aml，修改`_SB_.PC00.PEG0.PEGP`，去屏蔽其他NVMe硬盘或者PCIE设备。参见[fixing-nvme](https://dortania.github.io/OpenCore-Post-Install/universal/sleep.html#fixing-nvme)。
+同样，你也可以打开SSDT-DNVMe.aml，修改`_SB_.PC00.PEG0.PEGP`，屏蔽其他NVMe硬盘或者PCIE设备。参见[fixing-nvme](https://dortania.github.io/OpenCore-Post-Install/universal/sleep.html#fixing-nvme)。
 
 ## References
 1. https://github.com/luchina-gabriel/EFI-GIGABYTE-Z690-AORUS-ELITE-AX-12900K-RX6900XT
