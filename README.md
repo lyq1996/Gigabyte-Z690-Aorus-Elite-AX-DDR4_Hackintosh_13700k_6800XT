@@ -206,7 +206,7 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 我简单逆向了一下，`forcing power state to on`这个字符串在monterey的IOUSBFamily.kext中并不存在。
 
 所以我猜测：
-主板的usb控制器睡眠后有点问题，并且Apple在monterey上去除了强制认为usb port还在供电的相关代码，导致usb port被认为是断电的。因此，只要某个usb hub连接在某个usb端口上，usb端口断电后，usb hub上的所有设备都会被递归的终止。然后，bluetoothd所需要的bsd设备文件失效，bluetoothd打开设备文件超时，进而进程崩溃，再cloudpaird守护进程重新拉起。
+主板的usb控制器睡眠后有点问题，并且Apple在monterey上去除了强制认为usb port还在供电的相关代码，导致usb port被认为是断电的。因此，只要某个usb hub连接在某个usb端口上，usb端口断电后，usb hub上的所有设备都会被递归的终止。然后，bluetoothd所需要的bsd设备文件失效，bluetoothd打开设备文件超时，进而进程崩溃，再由cloudpaird守护进程重新拉起。
 
 关于为什么按电源键唤醒，有时bluetoothd直接hang住，消耗大量cpu，我认为这可能是唤醒原因不同所导致的，毕竟11.0之后，从有线键鼠设备唤醒需要点按两次，而电源键唤醒只要一次。简单看了log，在hub上的usb设备依旧被终止，没什么不同，Apple一定动了什么东西，后面有时间再分析。
 
