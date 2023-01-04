@@ -117,7 +117,7 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 其中，HS11是后置usb2.0 x4 hub，HS12是内建的usb连接器，HS13是rgb fusion端口。  
 唤醒后，IOUSBHostFamily驱动汇报所有的usb端口powering off，包括上面的内建的usb端口、后置usb 2.0 hub、rgb fusion端口。
 
-随后，IOUSBHostFamily驱动在准备恢复端口时，由于上游端口停掉了，所以把BRCM20702 Hub、USB Camera等挂在hub上的设备给停掉了，bluetoothd报错因为超时无法打开/dev/cu.BLTH这个bsd设备文件，随后bluetoothd崩溃并重启，蓝牙功能恢复。  
+随后，IOUSBHostFamily驱动在准备恢复端口时，由于上游端口停掉了，所以把BRCM20702 Hub、USB Camera等挂在hub上的设备给停掉了，bluetoothd第一次崩溃。随后重启，默认使用UART transport，然后无法打开/dev/cu.BLTH这个bsd设备文件，超时。15秒后，bluetoothd再次崩溃并重启。此时usb bluetooth controller已经被枚举到了，transport设置为usb，蓝牙功能恢复。  
 
 但实际上，不只是usb hub会报断电，所有的端口都会。相关日志如下：
 <details><summary>monterey 更多端口断电log</summary>
@@ -203,15 +203,16 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 
 可以看到，big sur并没有一些关于terminate Device的相关报错，唤醒后直接开始枚举usb设备了。  
 
-我简单逆向了一下，`forcing power state to on`这个字符串在monterey的IOUSBFamily.kext中并不存在。
+我简单逆向了一下，`forcing power state to on`这个字符串在monterey的IOUSBHostFamily.kext中并不存在。
 
 所以我猜测：
-主板的usb控制器睡眠后有点问题，并且Apple在monterey上去除了强制认为usb port还在供电的相关代码，导致usb port被认为是断电的。因此，只要某个usb hub连接在某个usb端口上，usb端口断电后，usb hub上的所有设备都会被递归的终止。然后，bluetoothd所需要的bsd设备文件失效，bluetoothd打开设备文件超时，进而进程崩溃，再由cloudpaird守护进程重新拉起。
+主板的usb控制器睡眠后有点问题。从S3 state唤醒后，所有的usb端口都被终止，并且只要某个usb hub连接在某个usb端口上，usb hub上的所有设备也会被递归的终止。bluetoothd两次崩溃，这时时间已经到15+秒后了，usb已经重新枚举过了，usb bluetooth controller回来了，cloudpaird守护进程重新拉起bluetooth，恢复正常。
 
-关于为什么按电源键唤醒，有时bluetoothd直接hang住，消耗大量cpu，我认为这可能是唤醒原因不同所导致的，毕竟11.0之后，从有线键鼠设备唤醒需要点按两次，而电源键唤醒只要一次。简单看了log，在hub上的usb设备依旧被终止，没什么不同，Apple一定动了什么东西，后面有时间再分析。
+关于为什么按电源键唤醒，有时bluetoothd直接疯狂循环，消耗大量cpu，我认为这可能是唤醒原因不同所导致的，毕竟11.0之后，从有线键鼠设备唤醒需要点按两次，而电源键唤醒只要一次。简单看了log，在hub上的usb设备依旧被终止，没什么不同。Apple一定动了什么东西，后面有时间再分析。
 
 <details><summary>一些从电源键唤醒后bluetoothd循环打印的日志</summary>
 <p>
+
 ```
 2023-01-02 13:11:35.209382+0800 0x1f9fe    Default     0x0                  8243   0    bluetoothd: [com.apple.bluetooth:Stack.LE]  Address rotation in progress:NO
 2023-01-02 13:11:35.209400+0800 0x1f9fe    Error       0x0                  8243   0    bluetoothd: [com.apple.bluetooth:Stack.HCI] OI_HCIIfc_SendHciCommand failed (status=1205)
@@ -239,6 +240,14 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 
 也许深入学习ACPI可以解决这个问题，也许不能，我会继续尝试。
 
+### 2023-01-04的分析
+根据os-y的博文（或许跟这里的睡眠问题无关）：[usb-fix](https://osy.gitbook.io/hac-mini-guide/details/usb-fix)
+我的理解是：
+
+USB设备会向USB XHCI控制器发送一个中断，将其唤醒。然后XHCI控制器唤醒PCH，PCH通过PCIe接口唤醒处理器。这里USB、LAN、SATA等控制器共享一个GPE（通用事件），多个PCI设备映射到了单个GPE。  
+MacOS的OSPM处理逻辑为：1. 如果存在EC，则GPE被忽略，从EC中获取哪个设备唤醒；2. 如果不存在EC，则使用PGE，对每个PCI设备枚举PM_Status，放到潜在的唤醒列表中，根据`acpi-wake-type`判断唤醒源，但XHCI设备不再拥有`acpi-wake-type`属性，所以变成了`dark wake`，导致了键盘/鼠标需要双击唤醒。
+
+又阅读了一下ACPI规范，规范中的[ACPI Waking And Sleep](https://uefi.org/specs/ACPI/6.5/16_Waking_and_Sleeping.html#transitioning-from-the-working-to-the-sleeping-state)，唤醒后OSPM准备系统从睡眠状态转换返回，然后运行_WAK method（这里会有一些notify的调用，内核会处理），再通知本地设备驱动程序从睡眠状态返回。所以我猜测问题可能出在`通知本地设备驱动从睡眠状态返回这里`，IOUSBHostFamily的terminateDevice不知道被内核哪里调用了，可能需要搭一个调试环境。
 
 ## 我的配置
 | 组件 | 型号 |
@@ -290,10 +299,7 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 2. 移除`boot-args`中的`-v debug=0x100 keepsyms=1`。
 
 ## Ventura OTA问题
-将MacPro7,1与Ventura一起使用时，无法进行增量macOS更新。要解决此问题，请尝试添加revpatch启动参数。
-```
-revpatch=auto,sbvmm,asset
-```
+将MacPro7,1与Ventura一起使用时，无法进行增量macOS更新。要解决此问题，请尝试添加boot args，`revpatch=auto,sbvmm,asset`。
 
 ## 关于其他AMD显卡的支持
 这个EFI无需修改，支持AMD 6000系列显卡。
