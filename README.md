@@ -241,13 +241,19 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 也许深入学习ACPI可以解决这个问题，也许不能，我会继续尝试。
 
 ### 2023-01-04的分析
-根据os-y的博文（或许跟这里的睡眠问题无关）：[usb-fix](https://osy.gitbook.io/hac-mini-guide/details/usb-fix)
+根据os-y的博文：[usb-fix](https://osy.gitbook.io/hac-mini-guide/details/usb-fix)，与这里蓝牙唤醒的问题可能无关，仅用于个人记录，因为这篇文章真的太有趣了，开发UTM的大佬太强了。
+
 我的理解是：
 
 USB设备会向USB XHCI控制器发送一个中断，将其唤醒。然后XHCI控制器唤醒PCH，PCH通过PCIe接口唤醒处理器。这里USB、LAN、SATA等控制器共享一个GPE（通用事件），多个PCI设备映射到了单个GPE。  
-MacOS的OSPM处理逻辑为：1. 如果存在EC，则GPE被忽略，从EC中获取哪个设备唤醒；2. 如果不存在EC，则使用PGE，对每个PCI设备枚举PM_Status，放到潜在的唤醒列表中，根据`acpi-wake-type`判断唤醒源，但XHCI设备不再拥有`acpi-wake-type`属性，所以变成了`dark wake`，导致了键盘/鼠标需要双击唤醒。
+MacOS的OSPM处理逻辑为：1. 如果存在EC，则GPE被忽略，从EC中获取哪个设备唤醒；2. 如果不存在EC，则使用PGE，对每个PCI设备枚举PM_Status，放到潜在的唤醒列表中，根据`acpi-wake-type`判断唤醒源，但XHCI设备不再拥有`acpi-wake-type`属性，所以变成了`dark wake`，导致了键盘/鼠标需要双击唤醒。  
 
-又阅读了一下ACPI规范，规范中的[ACPI Waking And Sleep](https://uefi.org/specs/ACPI/6.5/16_Waking_and_Sleeping.html#transitioning-from-the-working-to-the-sleeping-state)，唤醒后OSPM准备系统从睡眠状态转换返回，然后运行_WAK method（这里会有一些notify的调用，内核会处理），再通知本地设备驱动程序从睡眠状态返回。所以我猜测问题可能出在`通知本地设备驱动从睡眠状态返回这里`，IOUSBHostFamily的terminateDevice不知道被内核哪里调用了，可能需要搭一个调试环境。
+同时，100系列芯片组有点问题，PM_Status无法被正确读到。又因为`acpi-wake-type`不再有用，所以osy弄了个假的pci设备，设置了`acpi-wake-type`属性，在唤醒后读不到PM_Status时，用这个假的pci设备让内核认为是用户触发的唤醒，从而直接亮屏，在11.0及以下系统成功bypass了这个问题(尽管不太完美)。  
+
+但随着MacOS 11.0的发布，也有用户反馈这个方法失效了。  
+所以我猜测，在600系列主板上，需要两次按键唤醒的原因并不是PM_Status导致的。换句话说，600系列的硬件应该没毛病，通过将`acpi-wake_type`注入到假pci设备的方法失效，并且PCI设备PM_Status不再被枚举，一起导致了这个问题，应该很难解。
+
+又阅读了一下ACPI规范，规范中的[ACPI Waking And Sleep](https://uefi.org/specs/ACPI/6.5/16_Waking_and_Sleeping.html#transitioning-from-the-working-to-the-sleeping-state)，唤醒后OSPM准备系统从睡眠状态转换返回，然后运行_WAK method（这里会有一些notify的调用，内核会处理），再通知本地设备驱动程序从睡眠状态返回。所以我猜测问题可能出在`通知本地设备驱动从睡眠状态返回这里`，IOUSBHostFamily的terminateDevice不知道被内核哪里调用了，可能需要搭一个调试环境。今天依旧没有解决。
 
 ## 我的配置
 | 组件 | 型号 |
