@@ -246,7 +246,10 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 我的理解是：
 
 USB设备会向USB XHCI控制器发送一个中断，将其唤醒。然后XHCI控制器唤醒PCH，PCH通过PCIe接口唤醒处理器。这里USB、LAN、SATA等控制器共享一个GPE（通用事件），多个PCI设备映射到了单个GPE。  
-MacOS的OSPM处理逻辑为：1. 如果存在EC，则GPE被忽略，从EC中获取哪个设备唤醒；2. 如果不存在EC，则使用PGE，对每个PCI设备枚举PM_Status，放到潜在的唤醒列表中，根据`acpi-wake-type`判断唤醒源，但XHCI设备不再拥有`acpi-wake-type`属性，所以变成了`dark wake`，导致了键盘/鼠标需要双击唤醒。  
+
+MacOS的OSPM处理逻辑为：
+1. 如果存在EC，则GPE被忽略，从EC中获取哪个设备唤醒；
+2. 如果不存在EC，则使用GPE，对每个PCI设备枚举PM_Status，放到潜在的唤醒列表中，根据`acpi-wake-type`判断唤醒源，但XHCI设备不再拥有`acpi-wake-type`属性，所以变成了`dark wake`，导致了键盘/鼠标需要双击唤醒。  
 
 同时，100系列芯片组有点问题，PM_Status无法被正确读到。又因为`acpi-wake-type`不再有用，所以osy弄了个假的pci设备，设置了`acpi-wake-type`属性，在唤醒后读不到PM_Status时，用这个假的pci设备让内核认为是用户触发的唤醒，从而直接亮屏，在11.0及以下系统成功bypass了这个问题(尽管不太完美)。  
 
