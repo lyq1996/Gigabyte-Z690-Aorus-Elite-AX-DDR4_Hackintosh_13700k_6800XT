@@ -256,7 +256,7 @@ MacOS的OSPM处理逻辑为：
 但随着MacOS 11.0的发布，也有用户反馈这个方法失效了。  
 所以我猜测，在600系列主板上，需要两次按键唤醒的原因并不是PM_Status导致的。换句话说，600系列的硬件应该没毛病，通过将`acpi-wake_type`注入到假pci设备的方法失效，并且PCI设备PM_Status不再被枚举，一起导致了这个问题，应该很难解。
 
-又阅读了一下ACPI规范，规范中的[ACPI Waking And Sleep](https://uefi.org/specs/ACPI/6.5/16_Waking_and_Sleeping.html#transitioning-from-the-working-to-the-sleeping-state)，唤醒后OSPM准备系统从睡眠状态转换返回，然后运行_WAK method（这里会有一些notify的调用，内核会处理），再通知本地设备驱动程序从睡眠状态返回。所以我猜测问题可能出在`通知本地设备驱动从睡眠状态返回这里`，IOUSBHostFamily的terminateDevice不知道被内核哪里调用了，可能需要搭一个调试环境。今天依旧没有解决。
+又阅读了一下ACPI规范中的[ACPI Waking And Sleep](https://uefi.org/specs/ACPI/6.5/16_Waking_and_Sleeping.html#transitioning-from-the-working-to-the-sleeping-state)，唤醒后OSPM准备系统从睡眠状态转换返回，然后运行_WAK method（这里会有一些notify的调用，内核会处理），再通知本地设备驱动程序从睡眠状态返回。所以我猜测问题可能出在`通知本地设备驱动从睡眠状态返回这里`，IOUSBHostFamily的terminateDevice不知道被内核哪里调用了，可能需要搭一个调试环境。今天依旧没有解决。
 
 ## 我的配置
 | 组件 | 型号 |
