@@ -16,7 +16,7 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 
 ## 已知问题
 1. BIOS为F8及以下版本，在BIOS中`above 4g encoing`打开时，不会有二次睡眠问题；BIOS在F20及以上版本，二次睡眠死机。所以，如果想要在F20及以上版本正常睡眠，需要在BIOS中关闭`above 4g encoing`，并且设置`Booter - Quirks - ResizeAppleGpuBars`为-1，同时添加一个`boot args`，`npci=0x2000`。
-2. 我的无线网卡是Fenvi T919，纯血免驱卡，此前在MSI B660m迫击炮上一切正常。但我发现在这块主板上，唤醒睡眠时，有点小问题，详见下一小节。
+2. 我的无线网卡是Fenvi T919，纯血免驱卡，~~此前在MSI B660m迫击炮上一切正常~~（也不正常，问题一样，只是没有发现）。但我发现在这块主板上，唤醒睡眠时，有点小问题，详见下一小节。
 
 ### 唤醒后的蓝牙问题
 问题细节：
