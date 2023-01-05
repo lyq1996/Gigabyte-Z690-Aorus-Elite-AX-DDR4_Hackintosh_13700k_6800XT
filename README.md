@@ -14,6 +14,78 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 1. 该EFI同样支持Z690 Aorus Elite ddr4，但因为板载网卡被我用SSDT-DAX200.aml屏蔽了，这个SSDT只适用于ax版，所以要把SSDT-DAX200.aml关掉。
 2. Z690 Aorus Elite/Elite AX ddr5的USB端口有一点细微差别，不推荐使用。
 
+## 我的配置
+| 组件 | 型号 |
+| --- | --- |
+| CPU | 13th Gen Intel(R) Core(TM) i7-13700K |
+| 主板 | 技嘉Z690 Aorus Elite AX ddr4  |
+| 显卡 | 技嘉6800XT 超级雕 |
+| 内存 | 英睿达铂胜DDR4 3200MHz 16GBx2 超频至3800Mhz C16|
+| Wi-Fi与蓝牙 | Fenvi T919 |
+| 硬盘 | 三星PM9A1 2TB(`Windows`), 凯侠RC20(`macOS`)　|
+| OpenCore版本 | 0.8.8 |
+| macOS版本 | macOS Monterey 12.6.2 (21G320) |
+
+## 哪些东西工作?
+1. 几乎所有
+
+## 哪些东西不工作?
+1. 睡眠有条件的工作，见[已知问题](#已知问题)。
+2. 唤醒后蓝牙有点问题，见[唤醒后的蓝牙问题](#唤醒后的蓝牙问题)。
+3. 由于12、13代cpu的核显无法正常驱动，随航不可用。
+
+## 更新日志
+
+### 2022-01-05
+1. 不再需要ADBG。
+2. 修复MCHC设备重复导致的冲突，现在所有SSDT都正确加载。
+3. 更新OpenCore到v0.8.8。
+
+### 2022-01-02
+1. 初始化提交。
+
+
+## BIOS的相关设置
+以下基于默认BIOS设置进行修改。
+
+### 关闭项
+1. Secure Boot`【必须】`
+
+### 启用项
+1. Above 4G Enconding`【必须】`
+2. Above 4GB MMIO BIOS assignment`【必须】`
+3. Re-Size Bar`【必须】`
+4. ERP Ready  `【必须】`
+5. VT-D `【必须】`
+
+## 生成你的PlatformInfo`【！！！重要！！！】`
+使用这个EFI前需要遵循这个指南：[using-gensmbios](https://dortania.github.io/OpenCore-Post-Install/universal/iservices.html#using-gensmbios)，生成PlatformInfo，然后在opencore配置文件中的`PlatformInfo - Generic`填入。
+
+## 关于CpuTopologyRebuild.kext`【！！！重要！！！】`
+这个kext将e-core视为p-core的一个逻辑核心。(推测)在12代异构cpu调度时，提高了p-core的调度机会，带来了单线程的更高性能（因为8C20T时大核心被调度的几率，大于20C20T时的大核心被调度几率）。同样，在虚拟机中，在p-core上调度的几率也会变大，因此虚拟机多核心跑分也会更高。在多线程cpu全吃满时，性能不变。  
+
+所以，如果你的cpu不是大小核架构，关闭这个kext，并且从boot args中移除`-ctrsmt`。
+
+## 关闭啰嗦模式
+1. 关闭`Misc - Debug -  AppleDebug`、`Disable WatchDog`、 `ApplePanic`。
+2. 移除`boot-args`中的`-v debug=0x100 keepsyms=1`。
+
+## Ventura OTA问题
+将MacPro7,1与Ventura一起使用时，无法进行增量macOS更新。要解决此问题，请尝试添加boot args，`revpatch=auto,sbvmm,asset`。
+
+## 关于其他AMD显卡的支持
+这个EFI无需修改，支持AMD 6000系列显卡。
+
+对于5000系显卡以及以下，需要做一些小改动，参见[AMD GPUs #](https://dortania.github.io/GPU-Buyers-Guide/modern-gpus/amd-gpu.html#amd-gpus)。
+
+## 关于USB映射
+也许你需要做一些小修改才能够适配你的机箱。目前的usb没有映射机箱的usb type c，因为我机箱没有，没有映射网口那一排离网口较远的USB 3.0端口，没有映射板载无线的usb蓝牙端口，见[usb-map](/usb-map.md)。
+
+## 屏蔽其他NVMe硬盘
+如果你需要屏蔽一些不支持黑苹果的硬盘，只要打开`ACPI - Add - SSDT-DNVMe.aml`，这会屏蔽插在第一个M.2槽(靠近cpu)的NVMe协议硬盘。
+
+同样，你也可以打开SSDT-DNVMe.aml，修改`_SB_.PC00.PEG0.PEGP`，屏蔽其他NVMe硬盘或者PCIE设备。参见[fixing-nvme](https://dortania.github.io/OpenCore-Post-Install/universal/sleep.html#fixing-nvme)。
+
 ## 已知问题
 1. BIOS为F8及以下版本，在BIOS中`above 4g encoing`打开时，不会有二次睡眠问题；BIOS在F20及以上版本，二次睡眠死机。所以，如果想要在F20及以上版本正常睡眠，需要在BIOS中关闭`above 4g encoing`，并且设置`Booter - Quirks - ResizeAppleGpuBars`为-1，同时添加一个`boot args`，`npci=0x2000`。
 2. 我的无线网卡是Fenvi T919，纯血免驱卡，~~此前在MSI B660m迫击炮上一切正常~~（也不正常，问题一样，只是没有发现）。但我发现在这块主板上，唤醒睡眠时，有点小问题，详见下一小节。
@@ -258,75 +330,14 @@ MacOS的OSPM处理逻辑为：
 
 又阅读了一下ACPI规范中的[ACPI Waking And Sleep](https://uefi.org/specs/ACPI/6.5/16_Waking_and_Sleeping.html#transitioning-from-the-working-to-the-sleeping-state)，唤醒后OSPM准备系统从睡眠状态转换返回，然后运行_WAK method（这里会有一些notify的调用，内核会处理），再通知本地设备驱动程序从睡眠状态返回。所以我猜测问题可能出在`通知本地设备驱动从睡眠状态返回这里`，IOUSBHostFamily的terminateDevice不知道被内核哪里调用了，可能需要搭一个调试环境。今天依旧没有解决。
 
-## 我的配置
-| 组件 | 型号 |
-| --- | --- |
-| CPU | 13th Gen Intel(R) Core(TM) i7-13700K |
-| 主板 | 技嘉Z690 Aorus Elite AX ddr4  |
-| 显卡 | 技嘉6800XT 超级雕 |
-| 内存 | 英睿达铂胜DDR4 3200MHz 16GBx2 超频至3800Mhz C16|
-| Wi-Fi与蓝牙 | Fenvi T919 |
-| 硬盘 | 三星PM9A1 2TB(`Windows`), 凯侠RC20(`macOS`)　|
-| OpenCore版本 | 0.8.7 |
-| macOS版本 | macOS Monterey 12.6.2 (21G320) |
-
-## 哪些东西工作?
-1. 几乎所有
-
-## 哪些东西不工作?
-1. 睡眠有条件的工作，见[已知问题](#已知问题)。
-2. 唤醒后蓝牙有点问题，见[唤醒后的蓝牙问题](#唤醒后的蓝牙问题)。
-3. 由于12、13代cpu的核显无法正常驱动，随航不可用。
-
-## 更新日志
-### 2022-01-02
-1. 初始化提交。
-
-## BIOS的相关设置
-以下基于默认BIOS设置进行修改。
-
-### 关闭项
-1. Secure Boot`【必须】`
-
-### 启用项
-1. Above 4G Enconding`【必须】`
-2. Above 4GB MMIO BIOS assignment`【必须】`
-3. Re-Size Bar`【必须】`
-4. ERP Ready  `【必须】`
-5. VT-D `【必须】`
-
-## 生成你的PlatformInfo`【！！！重要！！！】`
-使用这个EFI前需要遵循这个指南：[using-gensmbios](https://dortania.github.io/OpenCore-Post-Install/universal/iservices.html#using-gensmbios)，生成PlatformInfo，然后在opencore配置文件中的`PlatformInfo - Generic`填入。
-
-## 关于CpuTopologyRebuild.kext`【！！！重要！！！】`
-这个kext将e-core视为p-core的一个逻辑核心。(推测)在12代异构cpu调度时，提高了p-core的调度机会，带来了单线程的更高性能（因为8C20T时大核心被调度的几率，大于20C20T时的大核心被调度几率）。同样，在虚拟机中，在p-core上调度的几率也会变大，因此虚拟机多核心跑分也会更高。在多线程cpu全吃满时，性能不变。  
-
-所以，如果你的cpu不是大小核架构，关闭这个kext，并且从boot args中移除`-ctrsmt`。
-
-## 关闭啰嗦模式
-1. 关闭`Misc - Debug -  AppleDebug`、`Disable WatchDog`、 `ApplePanic`。
-2. 移除`boot-args`中的`-v debug=0x100 keepsyms=1`。
-
-## Ventura OTA问题
-将MacPro7,1与Ventura一起使用时，无法进行增量macOS更新。要解决此问题，请尝试添加boot args，`revpatch=auto,sbvmm,asset`。
-
-## 关于其他AMD显卡的支持
-这个EFI无需修改，支持AMD 6000系列显卡。
-
-对于5000系显卡以及以下，需要做一些小改动，参见[AMD GPUs #](https://dortania.github.io/GPU-Buyers-Guide/modern-gpus/amd-gpu.html#amd-gpus)。
-
-## 关于USB映射
-也许你需要做一些小修改才能够适配你的机箱。目前的usb没有映射机箱的usb type c，因为我机箱没有，没有映射网口那一排离网口较远的USB 3.0端口，没有映射板载无线的usb蓝牙端口，见[usb-map](/usb-map.md)。
-
-## 屏蔽其他NVMe硬盘
-如果你需要屏蔽一些不支持黑苹果的硬盘，只要打开`ACPI - Add - SSDT-DNVMe.aml`，这会屏蔽插在第一个M.2槽(靠近cpu)的NVMe协议硬盘。
-
-同样，你也可以打开SSDT-DNVMe.aml，修改`_SB_.PC00.PEG0.PEGP`，屏蔽其他NVMe硬盘或者PCIE设备。参见[fixing-nvme](https://dortania.github.io/OpenCore-Post-Install/universal/sleep.html#fixing-nvme)。
 
 ## References
 1. https://github.com/luchina-gabriel/EFI-GIGABYTE-Z690-AORUS-ELITE-AX-12900K-RX6900XT
 2. https://www.tonymacx86.com/threads/gigabyte-z690-aero-g-i5-12600k-amd-rx-6800-xt.317179/page-219
 
 ## Credits
-1. Opencore project
+1. OpenCore
 2. Apple
+3. [vit9696](https://github.com/vit9696)
+4. [CaseySJ](https://github.com/caseysj)
+5. [osy](https://github.com/osy)

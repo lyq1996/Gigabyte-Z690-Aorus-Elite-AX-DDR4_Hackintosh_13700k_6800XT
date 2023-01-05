@@ -1,2 +1,4 @@
 .DS_Store
+EFI/APPLE/
 EFI/OC/my.plist
+EFI/OC/oldConfig.plist
