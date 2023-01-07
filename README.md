@@ -36,6 +36,12 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 
 ## 更新日志
 
+### 2022-01-07
+1. 更新Lilu.kext到v1.6.3。
+2. 更新WhateverGreen.kext到v1.6.3。
+3. 更新AppleALC.kext到v1.7.8
+4. 添加两个用于关闭睡眠的aml，默认不开。使用时需要把S3/S4-disable.aml两个aml和_S3/4 to XS3/4两个patch给勾上。
+
 ### 2022-01-05
 1. 不再需要ADBG。
 2. 修复MCHC设备重复导致的冲突，现在所有SSDT都正确加载。
@@ -43,7 +49,6 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 
 ### 2022-01-02
 1. 初始化提交。
-
 
 ## BIOS的相关设置
 以下基于默认BIOS设置进行修改。
