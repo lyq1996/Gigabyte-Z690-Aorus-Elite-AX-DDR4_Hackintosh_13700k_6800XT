@@ -23,7 +23,7 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 | 内存 | 英睿达铂胜DDR4 3200MHz 16GBx2 超频至3800Mhz C16|
 | Wi-Fi与蓝牙 | Fenvi T919 |
 | 硬盘 | 三星PM9A1 2TB(`Windows`), 凯侠RC20(`macOS`)　|
-| OpenCore版本 | 0.8.8 |
+| OpenCore版本 | 0.9.1 |
 | macOS版本 | macOS Monterey 13.2.1 (22D68) |
 
 ## 哪些东西工作?
@@ -63,7 +63,7 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 1. 初始化提交。
 
 ## BIOS的相关设置
-以下基于默认BIOS设置进行修改。
+以下基于默认BIOS F22版本设置进行修改。
 
 ### 关闭项
 1. Secure Boot`【必须】`
