@@ -24,7 +24,7 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 | Wi-Fi与蓝牙 | Fenvi T919 |
 | 硬盘 | 三星PM9A1 2TB(`Windows`), 凯侠RC20(`macOS`)　|
 | OpenCore版本 | 0.8.8 |
-| macOS版本 | macOS Monterey 12.6.2 (21G320) |
+| macOS版本 | macOS Monterey 13.2.1 (22D68) |
 
 ## 哪些东西工作?
 1. 几乎所有
@@ -35,6 +35,18 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 3. 由于12、13代cpu的核显无法正常驱动，随航不可用。
 
 ## 更新日志
+
+### 2022-03-11
+1. 更新AppleALC.kext到v1.8.0。 
+2. 更新RadeonSensor.kext到v0.3.3。
+3. 更新SMCRadeonGPU.kext到v0.3.3。
+4. 更新SMCProcessor.kext到v1.3.1。
+5. 更新SMCSuperIO.kext到v1.3.1。
+6. 更新VirtualSMC.kext到v1.6.4。
+7. 更新Lilu.kext到v1.6.4。
+8. 更新WhateverGreen.kext到v1.6.4。
+9. 更新OpenCore到v0.9.0。
+10. 找到[已知问题#1](#已知问题)的解决方法，需在BIOS中设置`Aperture Size`为1024MB。解决方案来自：https://www.tonymacx86.com/threads/gigabyte-z690-aero-g-i5-12600k-amd-rx-6800-xt.317179/page-236#post-2361924
 
 ### 2022-01-07
 1. 更新Lilu.kext到v1.6.3。
@@ -57,11 +69,13 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 1. Secure Boot`【必须】`
 
 ### 启用项
-1. Above 4G Enconding`【必须】`
-2. Above 4GB MMIO BIOS assignment`【必须】`
-3. Re-Size Bar`【必须】`
-4. ERP Ready  `【必须】`
-5. VT-D `【必须】`
+1. Internal Graphic设置打开`【必须】`，否则没有Aperture Size
+2. Aperture Size设置为1024MB`【必须】`
+3. Above 4G Enconding`【必须】`
+4. Above 4GB MMIO BIOS assignment`【必须】`
+5. Re-Size Bar`【必须】`
+6. ERP Ready  `【必须】`
+7. VT-D `【必须】`
 
 ## 生成你的PlatformInfo`【！！！重要！！！】`
 使用这个EFI前需要遵循这个指南：[using-gensmbios](https://dortania.github.io/OpenCore-Post-Install/universal/iservices.html#using-gensmbios)，生成PlatformInfo，然后在opencore配置文件中的`PlatformInfo - Generic`填入。
@@ -92,7 +106,7 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 同样，你也可以打开SSDT-DNVMe.aml，修改`_SB_.PC00.PEG0.PEGP`，屏蔽其他NVMe硬盘或者PCIE设备。参见[fixing-nvme](https://dortania.github.io/OpenCore-Post-Install/universal/sleep.html#fixing-nvme)。
 
 ## 已知问题
-1. BIOS为F8及以下版本，在BIOS中`above 4g encoing`打开时，不会有二次睡眠问题；BIOS在F20及以上版本，二次睡眠死机。所以，如果想要在F20及以上版本正常睡眠，需要在BIOS中关闭`above 4g encoing`，并且设置`Booter - Quirks - ResizeAppleGpuBars`为-1，同时添加一个`boot args`，`npci=0x2000`。
+1. ~~BIOS为F8及以下版本，在BIOS中`above 4g encoing`打开时，不会有二次睡眠问题；BIOS在F20及以上版本，二次睡眠死机。所以，如果想要在F20及以上版本正常睡眠，需要在BIOS中关闭`above 4g encoing`，并且设置`Booter - Quirks - ResizeAppleGpuBars`为-1，同时添加一个`boot args`，`npci=0x2000`~~。已找到修复方法。
 2. 我的无线网卡是Fenvi T919，纯血免驱卡，~~此前在MSI B660m迫击炮上一切正常~~（也不正常，问题一样，只是没有发现）。但我发现在这块主板上，唤醒睡眠时，有点小问题，详见下一小节。
 
 ### 唤醒后的蓝牙问题
@@ -334,6 +348,9 @@ MacOS的OSPM处理逻辑为：
 所以我猜测，在600系列主板上，需要两次按键唤醒的原因并不是PM_Status导致的。换句话说，600系列的硬件应该没毛病，通过将`acpi-wake_type`注入到假pci设备的方法失效，并且PCI设备PM_Status不再被枚举，一起导致了这个问题，应该很难解。
 
 又阅读了一下ACPI规范中的[ACPI Waking And Sleep](https://uefi.org/specs/ACPI/6.5/16_Waking_and_Sleeping.html#transitioning-from-the-working-to-the-sleeping-state)，唤醒后OSPM准备系统从睡眠状态转换返回，然后运行_WAK method（这里会有一些notify的调用，内核会处理），再通知本地设备驱动程序从睡眠状态返回。所以我猜测问题可能出在`通知本地设备驱动从睡眠状态返回这里`，IOUSBHostFamily的terminateDevice不知道被内核哪里调用了，可能需要搭一个调试环境。今天依旧没有解决。
+
+### 2023-03-11
+建议关闭S3、S4睡眠，或使用[SleepAndAutoBluetoothAndWifi](https://github.com/Mintimate/SleepAndAutoBluetoothAndWifi)，在睡眠前关闭蓝牙。
 
 
 ## References
