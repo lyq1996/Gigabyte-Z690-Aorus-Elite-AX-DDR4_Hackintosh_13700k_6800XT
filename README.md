@@ -11,7 +11,7 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 ![R23](cinabench.png)
 
 ## 注意：
-1. 该EFI同样支持Z690 Aorus Elite ddr4，但因为板载网卡被我用SSDT-DAX200.aml屏蔽了，这个SSDT只适用于ax版，所以要把SSDT-DAX200.aml关掉。
+1. 该EFI同样支持`Z690 Aorus Elite ddr4`，但板载网卡被我用SSDT-DAX200.aml屏蔽了，这个SSDT只适用于ax版，所以`Z690 Aorus Elite ddr4`要把SSDT-DAX200.aml关掉。
 2. Z690 Aorus Elite/Elite AX ddr5的USB端口有一点细微差别，不推荐使用。
 
 ## 我的配置
@@ -35,6 +35,14 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 3. 由于12、13代cpu的核显无法正常驱动，随航不可用。
 
 ## 更新日志
+
+### 2022-04-22
+1. AppleALC.kext v1.8.0 -> v1.8.1。
+2. RestrictEvent.kext v1.0.9 -> v1.1.0。
+3. BrcmFirmwareData.kext v2.6.4 -> v2.6.5。
+4. BrcmPatchRAM3.kext v2.6.4 -> v2.6.5。
+5. BlueToolFixup.kext v2.6.4 -> v2.6.5。
+6. OpenCore v0.9.0 -> v0.9.1。
 
 ### 2022-03-11
 1. 更新AppleALC.kext到v1.8.0。 
