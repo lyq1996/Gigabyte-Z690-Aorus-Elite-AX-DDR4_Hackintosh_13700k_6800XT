@@ -11,7 +11,7 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 ![R23](cinabench.png)
 
 ## 注意：
-1. 该EFI同样支持`Z690 Aorus Elite ddr4`，但板载网卡被我用SSDT-DAX200.aml屏蔽了，这个SSDT只适用于ax版，所以`Z690 Aorus Elite ddr4`要把SSDT-DAX200.aml关掉。
+1. 该EFI同样支持`Z690 Aorus Elite ddr4`，要把SSDT-DAX200.aml关掉，这个SSDT只适用于ax版，用于禁用板载网卡。
 2. Z690 Aorus Elite/Elite AX ddr5的USB端口有一点细微差别，不推荐使用。
 
 ## 我的配置
@@ -20,11 +20,11 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 | CPU | 13th Gen Intel(R) Core(TM) i7-13700K |
 | 主板 | 技嘉Z690 Aorus Elite AX ddr4  |
 | 显卡 | 技嘉6800XT 超级雕 |
-| 内存 | 英睿达铂胜DDR4 3200MHz 16GBx2 超频至3800Mhz C16|
+| 内存 | 英睿达铂胜DDR4 3200MHz 16GBx2 超频至4000Mhz C16|
 | Wi-Fi与蓝牙 | Fenvi T919 |
 | 硬盘 | 三星PM9A1 2TB(`Windows`), 凯侠RC20(`macOS`)　|
-| OpenCore版本 | 0.9.1 |
-| macOS版本 | macOS Monterey 13.2.1 (22D68) |
+| OpenCore版本 | 0.9.3 |
+| macOS版本 | macOS Ventura 13.4 (22F66) |
 
 ## 哪些东西工作?
 1. 几乎所有
@@ -36,7 +36,22 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 
 ## 更新日志
 
-### 2022-04-22
+### 2023-07-01
+1. 更新Lilu.kext到v1.6.6。
+2. 更新VirtualSMC.kext到v1.3.2。
+3. 更新WhateverGreen.kext到v1.6.5。
+4. 更新AppleALC.kext到v1.8.3。
+5. 更新SMCProcessor.kext到v1.3.2。
+6. 更新SMCSuperIO.kext到v1.3.2。
+7. 更新RestrictEvents.kext到v1.1.2。
+8. 更新CPUFriend.kext到v1.2.7。
+9. 更新BrcmFirmwareData.kext到v2.6.7。
+10. 更新BrcmPatchRAM3.kext到v2.6.7。
+11. 更新BlueToolFixup.kext到v2.6.7。
+12. 修复更新日志中的日期，我一直写的2022年（活在梦里）。
+13. 更新OpenCore到v0.9.3。
+
+### 2023-04-22
 1. AppleALC.kext v1.8.0 -> v1.8.1。
 2. RestrictEvent.kext v1.0.9 -> v1.1.0。
 3. BrcmFirmwareData.kext v2.6.4 -> v2.6.5。
@@ -44,30 +59,30 @@ P core 5.5Ghz，E core 4.3Ghz，Ring 4.8Ghz，R23跑分：
 5. BlueToolFixup.kext v2.6.4 -> v2.6.5。
 6. OpenCore v0.9.0 -> v0.9.1。
 
-### 2022-03-11
+### 2023-03-11
 1. 更新AppleALC.kext到v1.8.0。 
 2. 更新RadeonSensor.kext到v0.3.3。
 3. 更新SMCRadeonGPU.kext到v0.3.3。
 4. 更新SMCProcessor.kext到v1.3.1。
 5. 更新SMCSuperIO.kext到v1.3.1。
-6. 更新VirtualSMC.kext到v1.6.4。
+6. 更新VirtualSMC.kext到v1.3.1。
 7. 更新Lilu.kext到v1.6.4。
 8. 更新WhateverGreen.kext到v1.6.4。
 9. 更新OpenCore到v0.9.0。
 10. 找到[已知问题#1](#已知问题)的解决方法，需在BIOS中设置`Aperture Size`为1024MB。解决方案来自：https://www.tonymacx86.com/threads/gigabyte-z690-aero-g-i5-12600k-amd-rx-6800-xt.317179/page-236#post-2361924
 
-### 2022-01-07
+### 2023-01-07
 1. 更新Lilu.kext到v1.6.3。
 2. 更新WhateverGreen.kext到v1.6.3。
 3. 更新AppleALC.kext到v1.7.8
 4. 添加两个用于关闭睡眠的aml，默认不开。使用时需要把S3/S4-disable.aml两个aml和_S3/4 to XS3/4两个patch给勾上。
 
-### 2022-01-05
+### 2023-01-05
 1. 不再需要ADBG。
 2. 修复MCHC设备重复导致的冲突，现在所有SSDT都正确加载。
 3. 更新OpenCore到v0.8.8。
 
-### 2022-01-02
+### 2023-01-02
 1. 初始化提交。
 
 ## BIOS的相关设置
