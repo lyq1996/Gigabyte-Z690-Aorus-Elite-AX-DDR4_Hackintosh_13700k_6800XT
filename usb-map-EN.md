@@ -4,7 +4,7 @@
 ```
 4   usb2.0  near typec         pair 19     HS04
 5   usb2.0  near ethernet 2    pair 20     no map
-6   usb2.0  near ethernet 1    pair 21     HS06
+6   usb2.0  near ethernet 1    pair 21     no map
 7   usb2.0  near HDMI          pair 22     HS07
 8   usb2.0  near DP            pair 23     HS08
 9   usb2.0  usb 3.0 connecter  pair 24     HS09
@@ -16,7 +16,7 @@ Type: 4,5,6,7,8,9,11:0
 ## type c 2.0
 ```
 1   usb c   back usb type-c         pair 17     HS01
-?   usb c   usb typec connector     ？           ？（my case no type c）
+3   usb c   usb typec connector     pair 18     HS03
 
 Type: 1:9
 ```
@@ -24,19 +24,19 @@ Type: 1:9
 ## type c 3.0
 ```
 17  usb c   back usb type-c              SS01
-?   usb c   usb typec connector          ？（my case no type c）
+18  usb c   usb typec connector          SS03
 
 Type: 17:9
 ```
 
 ## 3.0
 ```
-19  usb3.0  near typec                   SS02
+19  usb3.0  near typec                   SS04
 20  usb3.0  near ethernet 2              no map
-21  usb3.0  near ethernet 1              SS03
-22  usb3.1  near HDMI                    SS04
-23  usb3.1  near DP                      SS05
-24  usb3.0  usb 3.0 connecter            SS06
+21  usb3.0  near ethernet 1              no map
+22  usb3.1  near HDMI                    SS07
+23  usb3.1  near DP                      SS08
+24  usb3.0  usb 3.0 connecter            SS09
 
 Type: 19,20,21,22,23,24:3
 ```
